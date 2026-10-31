@@ -42,7 +42,8 @@ for (const item of localManifest.items) {
       const remote = new Uint8Array(await (await get(segment)).arrayBuffer());
       if (sha(remote) !== sha(await readFile(path.join(localRoot, segment.slice(1))))) throw new Error('Remote HLS segment differs from build');
     }
-    await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-nostdin', '-i', url + item.url, '-f', 'null', '-']);
+    console.log(`Verified ${refs.length} online HLS segments; decoding live video.`);
+    await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-xerror', '-nostdin', '-i', url + item.url, '-f', 'null', '-']);
     report.checks.push('live-hls-decode');
   }
 }

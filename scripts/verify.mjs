@@ -21,7 +21,8 @@ for (const item of manifest.items) {
     if (!(await stat(path.join(path.dirname(local), segment))).size) throw new Error('Empty HLS segment');
   }
   evidence.segments += segments.length;
-  await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-nostdin', '-i', local, '-f', 'null', '-']);
+  console.log(`Decoding local HLS video ${evidence.videos}; ${segments.length} segments.`);
+  await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-xerror', '-nostdin', '-i', local, '-f', 'null', '-']);
   evidence.decodedVideos++;
 }
 evidence.manifestSha256 = sha(await readFile(path.join(root, 'manifest.json')));
