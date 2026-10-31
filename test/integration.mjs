@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import { mkdir, readFile, copyFile } from 'node:fs/promises';
+import { run, readJson, sevenZip } from '../scripts/lib.mjs';
+
+await run(process.execPath, ['scripts/demo.mjs']);
+process.env.ARCHIVE_PASSWORD = 'wrong-password';
+await assert.rejects(run(process.execPath, ['scripts/build.mjs', '--archive', 'input/demo.7z', '--id', 'bad-password']), /failed/);
+process.env.ARCHIVE_PASSWORD = 'demo-only-2026';
+await run(process.execPath, ['scripts/build.mjs', '--archive', 'input/demo.7z', '--id', 'integration-mixed']);
+await run(process.execPath, ['scripts/verify.mjs']);
+const mixed = await readJson('output/current.json');
+const check = await readJson(path.join(mixed.output, 'verification.json'));
+assert.equal(check.images, 1); assert.equal(check.videos, 1); assert.ok(check.segments >= 2); assert.equal(check.decodedVideos, 1);
+const single = path.resolve('.scratch/image-only');
+await mkdir(path.join(single, '图包'), { recursive: true });
+await copyFile('.scratch/demo/图包/图片 01.png', path.join(single, '图包/图片.png'));
+await run(sevenZip(), ['a', '-t7z', '-mhe=on', '-pdemo-only-2026', path.resolve('input/images.7z'), '.'], { cwd: single, sensitive: true });
+await run(process.execPath, ['scripts/build.mjs', '--archive', 'input/images.7z', '--id', 'integration-images']);
+await run(process.execPath, ['scripts/verify.mjs']);
+const images = await readJson('output/current.json');
+assert.notEqual(mixed.workerName, images.workerName);
+const manifest = await readJson(path.join(images.output, 'public/manifest.json'));
+assert.deepEqual(manifest.items.map(x => x.type), ['image']);
+// Every public output is independent of the archive password.
+assert.ok(!(await readFile(path.join(images.output, 'public/manifest.json'), 'utf8')).includes('demo-only-2026'));
+console.log('Integration passed: encrypted headers, wrong password, Chinese folders, mixed work, image-only work, independent names and full HLS decoding.');

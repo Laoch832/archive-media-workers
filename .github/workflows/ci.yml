@@ -1,0 +1,35 @@
+name: Archive pipeline CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SEVEN_ZIP: 7zz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install media tools
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg 7zip
+      - run: npm ci
+      - run: npm test
+      - name: Encrypted archive and HLS integration tests
+        run: node test/integration.mjs
+      - name: Compile Worker with static assets
+        run: node node_modules/wrangler/bin/wrangler.js deploy --dry-run --config "$(node -p 'JSON.parse(require("fs").readFileSync("output/current.json")).output')/wrangler.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-reports
+          path: |
+            output/**/build-report.json
+            output/**/verification.json
+          retention-days: 7

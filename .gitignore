@@ -1,0 +1,9 @@
+node_modules/
+input/
+output/
+.scratch/
+.wrangler/
+.env*
+*.7z
+*.zip
+*.log

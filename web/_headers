@@ -1,0 +1,10 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; media-src 'self' blob:; img-src 'self' blob: data:; style-src 'self'; connect-src 'self'; frame-ancestors 'none'
+
+/media/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.m3u8
+  Content-Type: application/vnd.apple.mpegurl
