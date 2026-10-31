@@ -44,8 +44,6 @@ jobs:
   publish:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
-    env:
-      SEVEN_ZIP: 7zz
     steps:
       - name: Checkout pipeline source
         uses: actions/checkout@v4
@@ -57,7 +55,10 @@ jobs:
         with:
           node-version: '24'
       - name: Install media tools
-        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg 7zip
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg 7zip
+          echo "SEVEN_ZIP=$(command -v 7zz || command -v 7z || command -v 7za)" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm test
       - name: Generate encrypted demo archive
