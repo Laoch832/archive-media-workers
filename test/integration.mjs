@@ -24,4 +24,16 @@ const manifest = await readJson(path.join(images.output, 'public/manifest.json')
 assert.deepEqual(manifest.items.map(x => x.type), ['image']);
 // Every public output is independent of the archive password.
 assert.ok(!(await readFile(path.join(images.output, 'public/manifest.json'), 'utf8')).includes('demo-only-2026'));
-console.log('Integration passed: encrypted headers, wrong password, Chinese folders, mixed work, image-only work, independent names and full HLS decoding.');
+const videoOnly = path.resolve('.scratch/video-only');
+await mkdir(path.join(videoOnly, '视频'), { recursive: true });
+await copyFile('.scratch/demo/视频/视频 01.mp4', path.join(videoOnly, '视频/原画.mp4'));
+await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', '.scratch/demo/视频/视频 01.mp4', '-t', '2', '-an', '-c:v', 'mpeg4', path.join(videoOnly, '视频/需转码.avi')]);
+await run(sevenZip(), ['a', '-t7z', '-mhe=on', '-pdemo-only-2026', path.resolve('input/videos.7z'), '.'], { cwd: videoOnly, sensitive: true });
+await run(process.execPath, ['scripts/build.mjs', '--archive', 'input/videos.7z', '--id', 'integration-videos']);
+await run(process.execPath, ['scripts/verify.mjs']);
+const videoResult = await readJson('output/current.json');
+const videoManifest = await readJson(path.join(videoResult.output, 'public/manifest.json'));
+assert.deepEqual(videoManifest.items.map(x => x.processing).sort(), ['h264-remux', 'h264-transcode']);
+assert.equal((await readJson(path.join(videoResult.output, 'verification.json'))).decodedVideos, 2);
+assert.equal(new Set([mixed.workerName, images.workerName, videoResult.workerName]).size, 3);
+console.log('Integration passed: encrypted headers, wrong password, Chinese folders, mixed/image-only/video-only work, H264 remux, transcode fallback, independent names and full HLS decoding.');
