@@ -43,6 +43,6 @@ npm run verify
 npm run deploy
 ```
 
-Actions 包含真实加密 7z、错误密码、中文路径、混合/图片单目录作品、独立命名、HLS 完整解码、静态文件数量与大小检查。部署后逐个比对图片、播放列表和所有视频切片的 SHA-256，并通过公网 URL 解码每个完整视频。`/api/health` 返回本作品计数。
+Actions 包含真实加密 7z、错误密码、中文路径、混合/图片单目录作品、独立命名、HLS 完整解码、静态文件数量与大小检查。部署后逐个比对图片、播放列表和所有视频切片的 SHA-256，并通过公网 URL 解码每个完整视频，再在 Chromium 实测图片加载、视频播放进度和画面尺寸，保存截图与报告。`/api/health` 返回本作品计数。
 
 参考：[Cloudflare 平台限制](https://developers.cloudflare.com/workers/platform/limits/)、[GitHub Actions 部署](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)、[GitHub 可复用工作流](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)。

@@ -74,10 +74,18 @@ jobs:
       - name: Decode all local HLS videos and verify limits
         run: npm run verify
       - name: Deploy and verify every image, segment and online video
+        id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npm run deploy
+      - name: Install Chromium for actual browser playback verification
+        run: npx playwright install --with-deps chromium
+      - name: Verify gallery and HLS playback in Chromium
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.url }}
+          BROWSER_REPORT_DIR: output/browser
+        run: node test/browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -86,4 +94,6 @@ jobs:
             output/**/build-report.json
             output/**/verification.json
             output/**/live-verification.json
+            output/browser/browser-verification.json
+            output/browser/gallery.png
           retention-days: 7
