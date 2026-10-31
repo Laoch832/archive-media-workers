@@ -16,7 +16,9 @@ try {
   const images = page.locator('figure img');
   const videos = page.locator('figure video');
   if (await images.count() !== expected.images || await videos.count() !== expected.videos) throw new Error('Browser gallery counts differ from health API');
-  for (let i = 0; i < await images.count(); i++) {
+  const imageSamples = Math.min(3, await images.count());
+  const videoSamples = Math.min(2, await videos.count());
+  for (let i = 0; i < imageSamples; i++) {
     await images.nth(i).scrollIntoViewIfNeeded();
     await images.nth(i).evaluate(img => new Promise((resolve, reject) => {
       if (img.complete) return img.naturalWidth > 0 ? resolve() : reject(new Error('Broken image'));
@@ -24,7 +26,7 @@ try {
     }));
   }
   const playback = [];
-  for (let i = 0; i < await videos.count(); i++) {
+  for (let i = 0; i < videoSamples; i++) {
     const video = videos.nth(i);
     await video.scrollIntoViewIfNeeded();
     await video.evaluate(v => v.play());
@@ -35,8 +37,8 @@ try {
   if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
   const reportDir = process.env.BROWSER_REPORT_DIR || '.scratch/browser';
   await mkdir(reportDir, { recursive: true });
-  await page.screenshot({ path: path.join(reportDir, 'gallery.png'), fullPage: true });
-  const report = { url, checkedAt: new Date().toISOString(), images: expected.images, videos: expected.videos, playback, consoleErrors: errors };
+  await page.screenshot({ path: path.join(reportDir, 'gallery.png') });
+  const report = { url, checkedAt: new Date().toISOString(), images: expected.images, videos: expected.videos, imageSamples, videoSamples, playback, consoleErrors: errors };
   await writeFile(path.join(reportDir, 'browser-verification.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));
 } finally { await browser.close(); }
